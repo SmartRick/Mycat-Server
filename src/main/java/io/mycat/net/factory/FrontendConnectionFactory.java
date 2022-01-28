@@ -32,6 +32,7 @@ import io.mycat.net.FrontendConnection;
 
 /**
  * @author mycat
+ * 抽象工厂设计模式
  */
 public abstract class FrontendConnectionFactory {
 	protected abstract FrontendConnection getConnection(NetworkChannel channel)

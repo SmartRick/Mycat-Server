@@ -44,6 +44,8 @@ import io.mycat.util.TimeUtil;
 import org.slf4j.Logger; import org.slf4j.LoggerFactory;
 
 /**
+ * 抽象数据库连接，通用数据库连接抽象
+ *
  * @author mycat
  */
 public abstract class AbstractConnection implements NIOConnection {

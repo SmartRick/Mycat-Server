@@ -53,6 +53,7 @@ import io.mycat.util.TimeUtil;
 
 /**
  * @author mycat
+ *
  */
 public class ServerConnection extends FrontendConnection {
 	private static final Logger LOGGER = LoggerFactory

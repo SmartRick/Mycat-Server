@@ -108,6 +108,7 @@ import io.mycat.util.ZKUtils;
 
 /**
  * @author mycat
+ * Mycat服务核心
  */
 public class MycatServer {
 
@@ -350,18 +351,22 @@ public class MycatServer {
         // startup processors
         int threadPoolSize = system.getProcessorExecutor();
         processors = new NIOProcessor[processorCount];
-        // a page size
+
+        //=================== 缓存池初始化 ===================
+        // 缓存页大小，默认2M
         int bufferPoolPageSize = system.getBufferPoolPageSize();
-        // total page number
+        // 缓存页数量
         short bufferPoolPageNumber = system.getBufferPoolPageNumber();
-        //minimum allocation unit
+        //minimum allocation unit 最小缓存池块大小4096
         short bufferPoolChunkSize = system.getBufferPoolChunkSize();
 
         int socketBufferLocalPercent = system.getProcessorBufferLocalPercent();
+        //缓存池类型
         int bufferPoolType = system.getProcessorBufferPoolType();
 
         switch (bufferPoolType) {
             case 0:
+                //默认创建堆外直接缓存池
                 bufferPool = new DirectByteBufferPool(bufferPoolPageSize, bufferPoolChunkSize,
                         bufferPoolPageNumber, system.getFrontSocketSoRcvbuf());
 
@@ -390,9 +395,11 @@ public class MycatServer {
             default:
                 bufferPool = new DirectByteBufferPool(bufferPoolPageSize, bufferPoolChunkSize,
                         bufferPoolPageNumber, system.getFrontSocketSoRcvbuf());
-                ;
+
                 totalNetWorkBufferSize = bufferPoolPageSize * bufferPoolPageNumber;
         }
+
+        //=================== 缓存池初始化 ===================
 
         /**
          * Off Heap For Merge/Order/Group/Limit 初始化
@@ -411,7 +418,9 @@ public class MycatServer {
         sequenceExecutor = ExecutorUtil.create("SequenceExecutor", threadPoolSize);
         timerExecutor = ExecutorUtil.create("Timer", system.getTimerExecutor());
         listeningExecutorService = MoreExecutors.listeningDecorator(businessExecutor);
-
+        /**
+         * 默认创建逻辑处理器数量的NIO处理器
+         */
         for (int i = 0; i < processors.length; i++) {
             processors[i] = new NIOProcessor("Processor" + i, bufferPool,
                     businessExecutor);
@@ -447,14 +456,16 @@ public class MycatServer {
                     system.getServerPort(), system.getServerBacklog(), sf, this.asyncChannelGroups[0]);
 
         } else {
+            //默认使用NIO
             LOGGER.info("using nio network handler ");
-
+            //创建NIO反应池
             NIOReactorPool reactorPool = new NIOReactorPool(
                     DirectByteBufferPool.LOCAL_BUF_THREAD_PREX + "NIOREACTOR",
                     processors.length);
+            //创建并启动NIO连接器
             connector = new NIOConnector(DirectByteBufferPool.LOCAL_BUF_THREAD_PREX + "NIOConnector", reactorPool);
             ((NIOConnector) connector).start();
-
+            //创建NIO连接接收器
             manager = new NIOAcceptor(DirectByteBufferPool.LOCAL_BUF_THREAD_PREX + NAME
                     + "Manager", system.getBindIp(), system.getManagerPort(), system.getServerBacklog(), mf, reactorPool);
 
@@ -538,9 +549,9 @@ public class MycatServer {
 
     public void ensureSqlstatRecycleFuture() {
         if (config.getSystem().getUseSqlStat() == 1) {
-            if(recycleSqlStatFuture == null){
+            if (recycleSqlStatFuture == null) {
                 recycleSqlStatFuture = scheduler
-                    .scheduleAtFixedRate(recycleSqlStat(), 0L, DEFAULT_SQL_STAT_RECYCLE_PERIOD, TimeUnit.MILLISECONDS);
+                        .scheduleAtFixedRate(recycleSqlStat(), 0L, DEFAULT_SQL_STAT_RECYCLE_PERIOD, TimeUnit.MILLISECONDS);
             }
         } else {
             if (recycleSqlStatFuture != null) {
@@ -980,7 +991,7 @@ public class MycatServer {
                         Map<String, PhysicalDBPool> nodes = config.getDataHosts();
                         for (PhysicalDBPool node : nodes.values()) {
                             Collection<PhysicalDatasource> dataSources = node.getAllDataSources();
-                            for(PhysicalDatasource ds : dataSources) {
+                            for (PhysicalDatasource ds : dataSources) {
                                 ds.calcTotalCount();
                             }
                         }
@@ -1016,17 +1027,17 @@ public class MycatServer {
 
                 List<CoordinatorLogEntry> CoordinatorLogEntryList = null;
                 long currentTime = TimeUtil.currentTimeMillis();
-                for(CoordinatorLogEntry coordinatorLogEntry : coordinatorLogEntries) {
+                for (CoordinatorLogEntry coordinatorLogEntry : coordinatorLogEntries) {
                     //超过执行时间20秒 进行重试
-                    if(currentTime >  sqlTimeout + 20 * 1000 + coordinatorLogEntry.createTime){
-                        if(CoordinatorLogEntryList == null) {
+                    if (currentTime > sqlTimeout + 20 * 1000 + coordinatorLogEntry.createTime) {
+                        if (CoordinatorLogEntryList == null) {
                             CoordinatorLogEntryList = new ArrayList<CoordinatorLogEntry>();
                         }
                         CoordinatorLogEntryList.add(coordinatorLogEntry);
                     }
                 }
-                if(CoordinatorLogEntryList != null) {
-                    performXARecoveryLog((CoordinatorLogEntry[])CoordinatorLogEntryList.toArray());
+                if (CoordinatorLogEntryList != null) {
+                    performXARecoveryLog((CoordinatorLogEntry[]) CoordinatorLogEntryList.toArray());
                 }
             }
         };
@@ -1075,19 +1086,19 @@ public class MycatServer {
                     needRollback = true;
                 }
                 if (participantLogEntry.txState == TxState.TX_COMMITED_STATE) {
-                	hasCommit = true;
+                    hasCommit = true;
                 }
             }
             //补充提交 prepare 状态的提交, xa commit or xa rollback
             if (needRollback) {
                 //1 can rollback
-            	if(!hasCommit) {
+                if (!hasCommit) {
                     for (int j = 0; j < coordinatorLogEntry.participants.length; j++) {
                         ParticipantLogEntry participantLogEntry = coordinatorLogEntry.participants[j];
                         if (participantLogEntry.txState == TxState.TX_COMMITED_STATE || participantLogEntry.txState == TxState.TX_ROLLBACKED_STATE) {
                             continue;
                         }                         //XA rollback
-                        String xacmd = "XA ROLLBACK " + coordinatorLogEntry.id  +",'"+ participantLogEntry.resourceName+"'" + ';';
+                        String xacmd = "XA ROLLBACK " + coordinatorLogEntry.id + ",'" + participantLogEntry.resourceName + "'" + ';';
                         LOGGER.debug("send xaCmd : {}", xacmd);
                         OneRawSQLQueryResultHandler resultHandler = new OneRawSQLQueryResultHandler(new String[0], new XARollbackCallback(coordinatorLogEntry.id,
                                 participantLogEntry
@@ -1095,15 +1106,15 @@ public class MycatServer {
                         //xa cmd send
                         sendXaCmd(participantLogEntry, xacmd, resultHandler);
                     }
-            	}  else {
-                    LOGGER.debug( "some has commit in {}",coordinatorLogEntry);
+                } else {
+                    LOGGER.debug("some has commit in {}", coordinatorLogEntry);
                     for (int j = 0; j < coordinatorLogEntry.participants.length; j++) {
                         ParticipantLogEntry participantLogEntry = coordinatorLogEntry.participants[j];
                         if (participantLogEntry.txState == TxState.TX_COMMITED_STATE || participantLogEntry.txState == TxState.TX_ROLLBACKED_STATE) {
                             continue;
                         }
                         //XA commit
-                        String xacmd = "XA COMMIT " + coordinatorLogEntry.id  +",'"+ participantLogEntry.resourceName+"'" + ';';
+                        String xacmd = "XA COMMIT " + coordinatorLogEntry.id + ",'" + participantLogEntry.resourceName + "'" + ';';
                         LOGGER.debug("send xaCmd : {}", xacmd);
                         OneRawSQLQueryResultHandler resultHandler = new OneRawSQLQueryResultHandler(new String[0], new XACommitCallback(coordinatorLogEntry.id,
                                 participantLogEntry
@@ -1111,10 +1122,10 @@ public class MycatServer {
                         //xa cmd send
                         sendXaCmd(participantLogEntry, xacmd, resultHandler);
                     }
-            	}      	
+                }
             }
         }
-   }
+    }
 
     private void sendXaCmd(ParticipantLogEntry participantLogEntry, String xacmd,
                            OneRawSQLQueryResultHandler resultHandler) {

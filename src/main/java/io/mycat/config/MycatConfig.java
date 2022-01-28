@@ -41,6 +41,7 @@ import io.mycat.util.TimeUtil;
 
 /**
  * @author mycat
+ * Mycat配置对象
  */
 public class MycatConfig {
 	
@@ -96,6 +97,12 @@ public class MycatConfig {
 		return system;
 	}
 
+	/**
+	 * 通用连接参数设置方法，用于设置前后端连接的连接Channel参数
+	 * @param con
+	 * @param isFrontChannel
+	 * @throws IOException
+	 */
 	public void setSocketParams(AbstractConnection con, boolean isFrontChannel)
 			throws IOException {
 		

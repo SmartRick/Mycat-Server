@@ -8,6 +8,9 @@ import io.mycat.net.ClosableConnection;
 import io.mycat.route.RouteResultsetNode;
 import io.mycat.server.ServerConnection;
 
+/**
+ * 后端连接，即MyCat与物理数据库的连接
+ */
 public interface BackendConnection extends ClosableConnection {
 	public boolean isModifiedSQLExecuted();
 

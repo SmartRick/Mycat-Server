@@ -42,6 +42,7 @@ import io.mycat.net.factory.FrontendConnectionFactory;
 
 /**
  * @author mycat
+ * NIO连接接收器
  */
 public final class NIOAcceptor extends Thread implements SocketAcceptor{
 	private static final Logger LOGGER = LoggerFactory.getLogger(NIOAcceptor.class);
@@ -54,6 +55,16 @@ public final class NIOAcceptor extends Thread implements SocketAcceptor{
 	private long acceptCount;
 	private final NIOReactorPool reactorPool;
 
+	/**
+	 *	NIO连接接收器
+	 * @param name			接收器名称
+	 * @param bindIp		接收器绑定ip，为回环地址
+	 * @param port			接收器绑定端口
+	 * @param backlog		回滚日志ID
+	 * @param factory		前端连接创建工厂
+	 * @param reactorPool	反应器池
+	 * @throws IOException
+	 */
 	public NIOAcceptor(String name, String bindIp, int port, int backlog,
 			FrontendConnectionFactory factory, NIOReactorPool reactorPool)
 			throws IOException {
@@ -128,6 +139,9 @@ public final class NIOAcceptor extends Thread implements SocketAcceptor{
 		}
 	}
 
+	/**
+	 * 接受一个连接
+	 */
 	private void accept() {
 		SocketChannel channel = null;
 		try {
@@ -149,6 +163,10 @@ public final class NIOAcceptor extends Thread implements SocketAcceptor{
 		}
 	}
 
+	/**
+	 * 关闭SocketChannel
+	 * @param channel
+	 */
 	private static void closeChannel(SocketChannel channel) {
 		if (channel == null) {
 			return;

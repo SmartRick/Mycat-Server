@@ -79,7 +79,7 @@ public abstract class FrontendConnection extends AbstractConnection {
 	protected volatile long executeSqlId = 0;
 	protected AtomicLong  responseSqlId = new AtomicLong(0); //新增executeSqlId ,repsonseSqlId 用于避免对一个sql 写回了多个错误的结果.
 	
-	protected FrontendPrivileges privileges;
+	protected FrontendPrivileges privileges;	//前端连接的权限审计器
 	protected FrontendQueryHandler queryHandler;
 	protected FrontendPrepareHandler prepareHandler;
 	protected LoadDataInfileHandler loadDataInfileHandler;

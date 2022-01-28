@@ -21,6 +21,7 @@ public class ConMap {
 		ConQueue queue = items.get(schema);
 		if (queue == null) {
 			ConQueue newQueue = new ConQueue();
+			//putIfAbsent方法说明：当key不存在才放入，如果key存在并不覆盖直接返回存在的value，如果key不存在就put并且返回null
 			queue = items.putIfAbsent(schema, newQueue);
 			return (queue == null) ? newQueue : queue;
 		}

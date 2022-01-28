@@ -42,14 +42,14 @@ public final class SystemConfig {
 
 	private static final String DEFAULT_SQL_PARSER = "druidparser";// fdbparser, druidparser
 	private static final short DEFAULT_BUFFER_CHUNK_SIZE = 4096;
-	private static final int DEFAULT_BUFFER_POOL_PAGE_SIZE = 512*1024*4;
+	private static final int DEFAULT_BUFFER_POOL_PAGE_SIZE = 512*1024*4;	//缓存页默认大小：2M
 	private static final short DEFAULT_BUFFER_POOL_PAGE_NUMBER = 64;
 
 
 
 	private int removeGraveAccent;
 	private int processorBufferLocalPercent;
-	private static final int DEFAULT_PROCESSORS = Runtime.getRuntime().availableProcessors();
+	private static final int DEFAULT_PROCESSORS = Runtime.getRuntime().availableProcessors();	//逻辑处理器数量
 	private int frontSocketSoRcvbuf = 1024 * 1024;
 	private int frontSocketSoSndbuf = 4 * 1024 * 1024;
 	private int backSocketSoRcvbuf = 4 * 1024 * 1024;// mysql 5.6

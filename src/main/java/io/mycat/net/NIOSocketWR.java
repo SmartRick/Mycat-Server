@@ -201,6 +201,12 @@ public class NIOSocketWR extends SocketWR {
 		}
 	}
 
+	/**
+	 * 1、分配读取缓存空间
+	 * 2、读取数据到读取缓存空间
+	 * 3、调用连接的读取数据方法
+	 * @throws IOException
+	 */
 	@Override
 	public void asynRead() throws IOException {
 		ByteBuffer theBuffer = con.readBuffer;

@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * DirectByteBuffer池，可以分配任意指定大小的DirectByteBuffer，用完需要归还
+ * 堆外直接缓冲池
  * @author wuzhih
  * @author zagnix
  */
@@ -31,6 +32,13 @@ public class DirectByteBufferPool implements BufferPool{
      */
     private final ConcurrentHashMap<Long,Long> memoryUsage;
 
+    /**
+     * 创建堆外缓冲池
+     * @param pageSize      缓存页大小
+     * @param chunkSize     缓存块大小
+     * @param pageCount     缓存页数量
+     * @param conReadBuferChunk 读取缓存块大小
+     */
     public DirectByteBufferPool(int pageSize, short chunkSize, short pageCount,int conReadBuferChunk) {
         allPages = new ByteBufferPage[pageCount];
         this.chunkSize = chunkSize;

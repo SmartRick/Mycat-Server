@@ -2,6 +2,9 @@ package io.mycat.net;
 
 import java.io.IOException;
 
+/**
+ * NIO反应池
+ */
 public class NIOReactorPool {
 	private final NIOReactor[] reactors;
 	private volatile int nextReactor;

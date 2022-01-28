@@ -65,6 +65,13 @@ public final class NIOProcessor {
 	//前端已连接数
 	private AtomicInteger frontendsLength = new AtomicInteger(0);
 
+	/**
+	 * 创建Nio处理器
+	 * @param name			处理器名称
+	 * @param bufferPool	缓冲池
+	 * @param executor		业务线程执行器
+	 * @throws IOException
+	 */
 	public NIOProcessor(String name, BufferPool bufferPool,
 			NameableExecutor executor) throws IOException {
 		this.name = name;

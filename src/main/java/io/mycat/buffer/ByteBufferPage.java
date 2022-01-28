@@ -7,8 +7,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import sun.nio.ch.DirectBuffer;
 
-/*
+/**
  * 用来保存一个一个ByteBuffer为底层存储的内存页
+ *
+ * 缓存页设计：
+ * 缓存页本质是一个ByteBuffer，这里将它比喻成一个缓存页，将这ByteBuffer拆分为了多个缓存块构成，在缓存页中记录了其中的缓存块数量和单个缓存块大小
  */
 @SuppressWarnings("restriction")
 public class ByteBufferPage {
@@ -18,8 +21,8 @@ public class ByteBufferPage {
     private final int chunkCount;  //chunk的个数
     private final BitSet chunkAllocateTrack; //某个chunk是否被分配
     private final AtomicBoolean allocLockStatus = new AtomicBoolean(false);  //锁
-    private final long startAddress;
-    private final ConcurrentHashMap<Long, Long> relationBufferThreadId;
+    private final long startAddress;    //缓存页起始地址
+    private final ConcurrentHashMap<Long, Long> relationBufferThreadId; //关联缓存块对应的线程ID
 
     public ByteBufferPage(ByteBuffer buf, int chunkSize) {
         super();
@@ -39,7 +42,7 @@ public class ByteBufferPage {
         int startChunk = -1;//从startChunk开始的
         int contiueCount = 0;//连续的chunk个数
         try {
-        	///枚举寻找连续的N个chunk
+        	//枚举寻找连续的N个chunk
             for (int i = 0; i < chunkCount; i++) {
             	//找到一个可用的
                 if (chunkAllocateTrack.get(i) == false) {
